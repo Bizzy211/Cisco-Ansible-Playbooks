@@ -1,0 +1,14 @@
+---
+- name: Ping Cisco Devices in Lab Network
+  hosts: "Lab Network"
+  gather_facts: no
+
+  tasks:
+    - name: Ping
+      cisco.ios.ios_ping:
+        dest: 8.8.8.8  # Google's DNS for testing; replace with your target IP
+      register: ping_results
+
+    - name: Print ping results
+      debug:
+        msg: "{{ ping_results }}"
