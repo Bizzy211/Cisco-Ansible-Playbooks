@@ -1,0 +1,11 @@
+---
+collections:
+  - name: ansible.netcommon
+    version: "latest"
+  - name: cisco.ios
+    version: "latest"
+
+# If you need specific Ansible versions, you can specify them here
+# though this is typically done in a Python virtual environment's
+# requirements.txt file for Ansible installation via pip
+# ansible==2.10.7
