@@ -1,6 +1,6 @@
 ---
 - name: Execute commands on Cisco Devices in Lab Network
-  hosts: "Lab Network"
+  hosts:
   gather_facts: no
 
   tasks:
