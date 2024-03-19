@@ -1,0 +1,10 @@
+---
+- name: Start MSCT Service
+  hosts: servers
+  become: yes
+  tasks:
+    - name: Start MSCT service
+      ansible.builtin.systemd:
+        name: msct
+        state: started
+        enabled: yes
