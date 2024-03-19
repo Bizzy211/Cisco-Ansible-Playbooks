@@ -1,0 +1,9 @@
+---
+- name: Stop ERSA Service
+  hosts: servers
+  become: yes
+  tasks:
+    - name: Stop ERSA service
+      ansible.builtin.systemd:
+        name: ersa
+        state: stopped
