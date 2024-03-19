@@ -1,15 +1,16 @@
 ---
-- name: Execute commands on Cisco Devices in Lab Network
-  hosts: AFJS, 55.55.55.2, 55.55.55.3, 55.55.55.4, 55.55.55.5
-  gather_facts: no
+- name: Ping www.google.com from Cisco devices
+  hosts: cisco_devices
+  gather_facts: false
+  connection: network_cli
 
   tasks:
-    - name: Ping Google
-      ios_command:
-        commands: 
-          - ping www.google.com
-      register: command_output
+    - name: Ping google.com
+      cisco.ios.ios_command:
+        commands:
+          - ping www.google.com repeat 5
+      register: ping_result
 
-    - name: Print command output
+    - name: Show ping results
       debug:
-        var: command_output.stdout_lines
+        var: ping_result.stdout_lines
