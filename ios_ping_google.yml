@@ -1,6 +1,6 @@
 ---
 - name: Execute commands on Cisco Devices in Lab Network
-  hosts: AFJS
+  hosts: 55.55.55.1
   gather_facts: no
 
   tasks:
