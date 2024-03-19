@@ -1,5 +1,6 @@
 ---
 - name: Start ERSA Service
+  hosts: ERSA_Sensornodes
   become: yes
   tasks:
     - name: Start ERSA service
