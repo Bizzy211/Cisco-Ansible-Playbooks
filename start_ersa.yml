@@ -1,6 +1,6 @@
 ---
 - name: Start ERSA Service
-  hosts: ERSA_Sensornodes
+  hosts: 192.168.1.221
   become: yes
   tasks:
     - name: Start ERSA service
