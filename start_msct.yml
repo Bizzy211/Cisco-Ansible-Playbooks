@@ -1,6 +1,6 @@
 ---
 - name: Start MSCT Service
-  hosts: servers
+  hosts: AFJS_MSCTs
   become: yes
   tasks:
     - name: Start MSCT service
