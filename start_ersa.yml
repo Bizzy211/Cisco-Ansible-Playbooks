@@ -1,0 +1,10 @@
+---
+- name: Start ERSA Service
+  hosts: servers
+  become: yes
+  tasks:
+    - name: Start ERSA service
+      ansible.builtin.systemd:
+        name: ersa
+        state: started
+        enabled: yes
