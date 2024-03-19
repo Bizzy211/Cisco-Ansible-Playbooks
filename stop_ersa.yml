@@ -1,6 +1,6 @@
 ---
 - name: Stop ERSA Service
-  hosts: servers
+  hosts: ERSA_Sensornodes
   become: yes
   tasks:
     - name: Stop ERSA service
