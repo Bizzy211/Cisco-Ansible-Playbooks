@@ -1,6 +1,6 @@
 ---
 - name: Stop MSCT Service
-  hosts: servers
+  hosts: AFJS_MSCTs
   become: yes
   tasks:
     - name: Stop MSCT service
