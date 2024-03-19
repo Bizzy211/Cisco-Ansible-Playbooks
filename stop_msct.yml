@@ -1,0 +1,9 @@
+---
+- name: Stop MSCT Service
+  hosts: servers
+  become: yes
+  tasks:
+    - name: Stop MSCT service
+      ansible.builtin.systemd:
+        name: msct
+        state: stopped
