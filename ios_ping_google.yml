@@ -7,7 +7,7 @@
   tasks:
     - name: run show version on the routers
       ios_command:
-        commands: show version | incl Version
+        commands: ping www.google.com
       register: output
 
     - name: print output
