@@ -1,14 +1,15 @@
 ---
-- name: Ping www.google.com from Cisco devices
+
+- name: Cisco show version example
   hosts: JNET_Network
   gather_facts: false
 
   tasks:
-    - name: Test reachability to 198.51.100.251 using default vrf
-      cisco.ios.ios_ping:
-        dest: www.google.com
-        register: ping_result
+    - name: run show version on the routers
+      ios_command:
+        commands: show version | incl Version
+      register: output
 
-    - name: Show ping results
+    - name: print output
       debug:
-        var: ping_result.stdout_lines
+        var: output.stdout_lines
