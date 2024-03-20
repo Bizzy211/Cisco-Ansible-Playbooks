@@ -4,11 +4,10 @@
   gather_facts: false
 
   tasks:
-    - name: Ping google.com
-      cisco.ios.ios_command:
-        commands:
-          - ping www.google.com repeat 5
-      register: ping_result
+    - name: Test reachability to 198.51.100.251 using default vrf
+      cisco.ios.ios_ping:
+        dest: www.google.com
+        register: ping_result
 
     - name: Show ping results
       debug:
