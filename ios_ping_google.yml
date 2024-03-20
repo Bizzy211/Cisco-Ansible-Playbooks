@@ -5,7 +5,7 @@
   gather_facts: false
 
   tasks:
-    - name: run show version on the routers
+    - name: ping google on the routers
       ios_command:
         commands: ping www.google.com
       register: output
