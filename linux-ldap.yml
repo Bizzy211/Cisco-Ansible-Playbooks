@@ -2,11 +2,10 @@
 - name: Join Red Hat Linux server to AD domain
   hosts: redhat_servers
   become: yes
-  
   vars:
     ad_domain: bizzy-lab.com
-    ad_user: administrator
-    ad_password: password
+    ad_user: "{{ ansible_user }}"
+    ad_password: "{{ ansible_password }}"
 
   tasks:
   - name: Install required packages
@@ -15,6 +14,17 @@
         - realmd
         - sssd
       state: present
+
+  - name: Check if FIPS mode is enabled
+    command: cat /proc/sys/crypto/fips_enabled
+    register: fips_check
+    changed_when: false
+    failed_when: false
+
+  - name: Warn if FIPS mode is not enabled
+    debug:
+      msg: "Warning: FIPS mode is not enabled on this system."
+    when: fips_check.stdout != '1'
 
   - name: Join the AD domain
     command: realm join --user={{ ad_user }} {{ ad_domain }} --install=/ -U {{ ad_user }}%{{ ad_password }}
