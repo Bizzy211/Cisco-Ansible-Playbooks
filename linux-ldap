@@ -1,0 +1,43 @@
+---
+- name: Join Red Hat Linux server to AD domain
+  hosts: redhat_servers
+  become: yes
+  
+  vars:
+    ad_domain: bizzy-lab.com
+    ad_user: administrator
+    ad_password: password
+
+  tasks:
+  - name: Install required packages
+    package:
+      name:
+        - realmd
+        - sssd
+      state: present
+
+  - name: Join the AD domain
+    command: realm join --user={{ ad_user }} {{ ad_domain }} --install=/ -U {{ ad_user }}%{{ ad_password }}
+    register: join_result
+    ignore_errors: yes
+
+  - name: Check the AD join result
+    fail:
+      msg: "Unable to join the AD domain, {{ join_result.stderr }}"
+    when: join_result.rc != 0
+
+  - name: Restart SSSD service
+    service:
+      name: sssd
+      state: restarted
+      enabled: yes
+
+  - name: Validate the AD join
+    command: getent passwd {{ ad_user }}
+    register: validate_result
+    ignore_errors: yes
+
+  - name: Check the validation result
+    fail:
+      msg: "AD join validation failed, {{ validate_result.stderr }}"
+    when: validate_result.rc != 0
