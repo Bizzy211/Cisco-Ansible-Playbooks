@@ -76,8 +76,6 @@
         responses:
           (?i)Password for {{ ad_user }}: "{{ ad_password }}\n"
       register: join_result
-      ignore_errors: yes
-      no_log: true
 
     - name: Check the AD join result
       fail:
