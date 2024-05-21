@@ -71,9 +71,7 @@
     when: realm_discover_result.rc != 0
 
   - name: Join the AD domain
-    command: realm join --user=administrator {{ ad_domain }}
-    responses:
-          (?i)Password for your_username: "{{ ad_password }}\n"
+    command: realm join -u {{ ad_user }} -p {{ ad_password }} -v {{ ad_domain }}
     register: join_result
     ignore_errors: yes
 
