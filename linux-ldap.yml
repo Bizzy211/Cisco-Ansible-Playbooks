@@ -3,7 +3,7 @@
   hosts: redhat_servers
   become: yes
   vars:
-    ad_domain: bizzy-lab.com
+    ad_domain: lab-dc-01.bizzy-lab.com
     ad_user: "{{ lookup('env', 'DOMAIN_JOIN_USER') }}"
     ad_password: "{{ lookup('env', 'DOMAIN_JOIN_PASSWORD') }}"
 
