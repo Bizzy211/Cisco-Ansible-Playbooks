@@ -72,7 +72,7 @@
 
     - name: Join the AD domain
       expect:
-        command: realm join --user={{ ad_user }} {{ ad_domain }}
+        command: realm join -U {{ ad_user }} {{ ad_domain }}
         responses:
           (?i)Password for {{ ad_user }}: "{{ ad_password }}\n"
       register: join_result
