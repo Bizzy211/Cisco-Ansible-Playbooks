@@ -1,6 +1,6 @@
 ---
 - name: Join Red Hat Linux server to AD domain
-  hosts: redhat_servers
+  hosts: Gold_Systems
   become: yes
   vars:
     ad_domain: lab-dc-01.bizzy-lab.com
