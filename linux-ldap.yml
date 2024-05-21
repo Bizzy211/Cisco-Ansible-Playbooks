@@ -1,11 +1,11 @@
 ---
 - name: Join Red Hat Linux server to AD domain
-  hosts: Gold_Systems
+  hosts: redhat_servers
   become: yes
   vars:
     ad_domain: bizzy-lab.com
-    ad_user: "{{ ansible_user }}"
-    ad_password: "{{ ansible_password }}"
+    ad_user: "{{ lookup('env', 'DOMAIN_JOIN_USER') }}"
+    ad_password: "{{ lookup('env', 'DOMAIN_JOIN_PASSWORD') }}"
 
   tasks:
   - name: Install required packages
@@ -13,7 +13,31 @@
       name:
         - realmd
         - sssd
+        - samba-common
+        - samba-common-tools
+        - oddjob
+        - oddjob-mkhomedir
+        - adcli
+        - chrony
       state: present
+
+  - name: Ensure chrony is started and enabled
+    service:
+      name: chronyd
+      state: started
+      enabled: yes
+
+  - name: Configure chrony for time synchronization
+    blockinfile:
+      path: /etc/chrony.conf
+      block: |
+        server {{ ad_domain }} iburst
+        server time.windows.com iburst
+
+  - name: Restart chrony service
+    service:
+      name: chronyd
+      state: restarted
 
   - name: Check if FIPS mode is enabled
     command: cat /proc/sys/crypto/fips_enabled
@@ -26,14 +50,34 @@
       msg: "Warning: FIPS mode is not enabled on this system."
     when: fips_check.stdout != '1'
 
+  - name: Check DNS resolution for the AD domain
+    command: nslookup {{ ad_domain }}
+    register: nslookup_result
+    ignore_errors: yes
+
+  - name: Fail if DNS resolution fails
+    fail:
+      msg: "DNS resolution for the AD domain failed: {{ nslookup_result.stderr }}"
+    when: nslookup_result.rc != 0
+
+  - name: Discover the AD domain
+    command: realm discover {{ ad_domain }}
+    register: realm_discover_result
+    ignore_errors: yes
+
+  - name: Fail if realm discover fails
+    fail:
+      msg: "Unable to discover the AD domain: {{ realm_discover_result.stderr }}"
+    when: realm_discover_result.rc != 0
+
   - name: Join the AD domain
-    command: realm join --user={{ ad_user }} {{ ad_domain }} --install=/ -U {{ ad_user }}%{{ ad_password }}
+    command: realm join --user={{ ad_user }} --password={{ ad_password }} {{ ad_domain }}
     register: join_result
     ignore_errors: yes
 
   - name: Check the AD join result
     fail:
-      msg: "Unable to join the AD domain, {{ join_result.stderr }}"
+      msg: "Unable to join the AD domain: {{ join_result.stderr }}"
     when: join_result.rc != 0
 
   - name: Restart SSSD service
@@ -49,5 +93,5 @@
 
   - name: Check the validation result
     fail:
-      msg: "AD join validation failed, {{ validate_result.stderr }}"
+      msg: "AD join validation failed: {{ validate_result.stderr }}"
     when: validate_result.rc != 0
