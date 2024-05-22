@@ -19,7 +19,6 @@
           - oddjob-mkhomedir
           - adcli
           - chrony
-          - pexpect
         state: present
 
     - name: Ensure chrony is started and enabled
