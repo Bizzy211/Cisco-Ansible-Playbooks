@@ -88,13 +88,23 @@
         name: sssd
         state: restarted
         enabled: yes
-
-    - name: Validate the AD join
-      command: getent passwd {{ ad_user }}
-      register: validate_result
+        
+    - name: Validate the AD join using realm list
+      command: realm list
+      register: realm_list_result
       ignore_errors: yes
 
-    - name: Check the validation result
+    - name: Check the realm list result for domain name
       fail:
-        msg: "AD join validation failed: {{ validate_result.stderr }}"
-      when: validate_result.rc != 0
+        msg: "AD join validation failed: Domain name not found or incorrect"
+      when: "'domain-name: bizzy-lab.com' not in realm_list_result.stdout"
+
+    - name: Validate the /etc/sssd/sssd.conf file for domain configuration
+      command: grep 'bizzy-lab.com' /etc/sssd/sssd.conf
+      register: sssd_conf_result
+      ignore_errors: yes
+
+    - name: Check the sssd.conf result for domain configuration
+      fail:
+        msg: "AD join validation failed: Domain configuration not found in /etc/sssd/sssd.conf"
+      when: sssd_conf_result.rc != 0
