@@ -1,4 +1,5 @@
-- name: Disjoin from the 
+---
+- name: Leave AD 
   hosts: Gold_Systems
   become: yes
   command: realm leave bizzy-lab.com
