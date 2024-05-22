@@ -1,4 +1,6 @@
-- name: Disjoin from the domain
+- name: Disjoin from the 
+  hosts: Gold_Systems
+  become: yes
   command: realm leave bizzy-lab.com
   register: leave_domain_result
   ignore_errors: yes
