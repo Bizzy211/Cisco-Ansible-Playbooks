@@ -32,7 +32,7 @@
         path: /etc/chrony.conf
         block: |
           server {{ ad_domain }} iburst
-          server time.windows.com iburst
+          server time.windows.com iburst          
 
     - name: Restart chrony service
       service:
@@ -102,7 +102,7 @@
         msg: "Realm list result: {{ realm_list_result.stdout }}"
 
     - name: Check the realm list result for domain name
-      command: grep 'domain_name: bizzy-lab.com' realm list
+      command: grep 'domain-name: bizzy-lab.com' <<< "{{ realm_list_result.stdout }}"
       register: domain_name_result
       ignore_errors: yes
 
