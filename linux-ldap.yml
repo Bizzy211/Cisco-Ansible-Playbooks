@@ -39,16 +39,19 @@
         name: chronyd
         state: restarted
 
-    - name: Check if FIPS mode is enabled
-      command: cat /proc/sys/crypto/fips_enabled
-      register: fips_check
-      changed_when: false
-      failed_when: false
+    - name: Check FIPS mode status
+      command: sudo fipscheck
+      register: fipscheck_result
+      ignore_errors: yes
 
-    - name: Warn if FIPS mode is not enabled
+    - name: Display FIPS check result
       debug:
-        msg: "Warning: FIPS mode is not enabled on this system."
-      when: fips_check.stdout != '1'
+        msg: "FIPS check result: {{ fipscheck_result.stdout }}"
+
+    - name: Fail if FIPS mode is not enabled
+      fail:
+        msg: "FIPS mode is not enabled. fipscheck result: {{ fipscheck_result.stdout }}"
+      when: fipscheck_result.rc != 0
 
     - name: Check DNS resolution for the AD domain
       command: nslookup {{ ad_domain }}
@@ -93,6 +96,10 @@
       command: realm list
       register: realm_list_result
       ignore_errors: yes
+
+    - name: Display realm list result
+      debug:
+        msg: "Realm list result: {{ realm_list_result.stdout }}"
 
     - name: Check the realm list result for domain name
       command: grep 'domain_name: bizzy-lab.com' realm list
