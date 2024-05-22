@@ -1,0 +1,9 @@
+- name: Disjoin from the domain
+  command: realm leave bizzy-lab.com
+  register: leave_domain_result
+  ignore_errors: yes
+
+- name: Check the disjoin result
+  fail:
+    msg: "Failed to leave the domain: {{ leave_domain_result.stderr }}"
+  when: leave_domain_result.rc != 0
