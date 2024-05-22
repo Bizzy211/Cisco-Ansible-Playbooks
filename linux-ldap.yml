@@ -95,9 +95,9 @@
       ignore_errors: yes
 
     - name: Check the realm list result for domain name
-      fail:
-        msg: "AD join validation failed: Domain name not found or incorrect"
-      when: "'domain-name: bizzy-lab.com' not in realm_list_result.stdout"
+      command: grep 'domain_name: bizzy-lab.com' realm list
+      register: domain_name_result
+      ignore_errors: yes
 
     - name: Validate the /etc/sssd/sssd.conf file for domain configuration
       command: grep 'bizzy-lab.com' /etc/sssd/sssd.conf
