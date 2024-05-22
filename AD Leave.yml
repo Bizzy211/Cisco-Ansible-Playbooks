@@ -2,11 +2,13 @@
 - name: Leave AD 
   hosts: Gold_Systems
   become: yes
-  command: realm leave bizzy-lab.com
-  register: leave_domain_result
-  ignore_errors: yes
+  tasks:
+    - name: Disjoin from the domain
+      command: realm leave bizzy-lab.com
+      register: leave_domain_result
+      ignore_errors: yes
 
-- name: Check the disjoin result
-  fail:
-    msg: "Failed to leave the domain: {{ leave_domain_result.stderr }}"
-  when: leave_domain_result.rc != 0
+    - name: Check the disjoin result
+      fail:
+        msg: "Failed to leave the domain: {{ leave_domain_result.stderr }}"
+      when: leave_domain_result.rc != 0
