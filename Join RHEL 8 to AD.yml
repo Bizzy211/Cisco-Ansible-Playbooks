@@ -6,6 +6,7 @@
   hosts: Gold_Systems
   become: yes
   vars:
+    domain: "bizzy-lab.com"
     ad_domain: "lab-dc-01.bizzy-lab.com"
     ad_user: "{{ lookup('env', 'DOMAIN_JOIN_USER') }}"
     ad_password: "{{ lookup('env', 'DOMAIN_JOIN_PASSWORD') }}"
@@ -67,19 +68,19 @@
           admin_server = FILE:/var/log/kadmind.log
 
           [libdefaults]
-          default_realm = {{ ad_domain | upper }}
-          dns_lookup_realm = false
+          default_realm = {{ domain | upper }}
+          dns_lookup_realm = true
           dns_lookup_kdc = true
 
           [realms]
-          {{ ad_domain | upper }} = {
+          {{ domain | upper }} = {
             kdc = {{ ad_domain }}
             admin_server = {{ ad_domain }}
           }
 
           [domain_realm]
-          .{{ ad_domain }} = {{ ad_domain | upper }}
-          {{ ad_domain }} = {{ ad_domain | upper }}
+          .{{ domain }} = {{ domain | upper }}
+          {{ domain }} = {{ domain | upper }}
 
     - name: Check FIPS mode status
       command: fipscheck
