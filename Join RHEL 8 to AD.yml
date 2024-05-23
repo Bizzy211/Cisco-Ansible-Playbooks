@@ -116,9 +116,13 @@
         msg: "Unable to discover the AD domain: {{ realm_discover_result.stderr }}"
       when: realm_discover_result.rc != 0
 
-    - name: Join the server to Active Directory
-      command: echo "{{ ad_password }}" | realm join --user={{ ad_user }} {{ ad_domain }}
-      when: "'active-directory' in realm_discover_result.stdout"
+    - name: Join the AD domain
+      expect:
+        command: realm join -U {{ ad_user }} {{ ad_domain }}
+        responses:
+          Password for *: "{{ ad_password }}"
+      register: join_result
+      timeout: 120  # Increase the timeout to 120 seconds
 
     - name: Enable and start SSSD service
       systemd:
