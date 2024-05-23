@@ -151,29 +151,31 @@
         line: '%temp-sudo-group ALL=(ALL) ALL'
         validate: '/usr/sbin/visudo -cf %s'
 
-    - name: Validate the AD join using realm list
+    - name: Check the realm list result for domain name
       command: realm list
       register: realm_list_result
       ignore_errors: yes
 
-    - name: Display realm list result
-      debug:
-        msg: "Realm list result: {{ realm_list_result.stdout }}"
-
-    - name: Check the realm list result for domain name
-      command: grep 'bizzy-lab.com' realm list
+    - name: Validate if bizzy-lab.com is in realm list
+      command: grep 'bizzy-lab.com'
+      args:
+        stdin: "{{ realm_list_result.stdout }}"
       register: domain_name_result
-      ignore_errors: yes
+      changed_when: false
+      failed_when: domain_name_result.rc != 0
 
-    - name: Validate the /etc/sssd/sssd.conf file for domain configuration
+    - name: Check the /etc/sssd/sssd.conf file for domain configuration
       command: grep 'bizzy-lab.com' /etc/sssd/sssd.conf
       register: sssd_conf_result
       ignore_errors: yes
 
-    - name: Check the sssd.conf result for domain configuration
-      fail:
-        msg: "AD join validation failed: Domain configuration not found in /etc/sssd/sssd.conf"
-      when: sssd_conf_result.rc != 0
+    - name: Validate the /etc/sssd/sssd.conf file for domain configuration
+      command: grep 'bizzy-lab.com'
+      args:
+        stdin: "{{ sssd_conf_result.stdout }}"
+      register: sssd_conf_result_validation
+      changed_when: false
+      failed_when: sssd_conf_result_validation.rc != 0
 
     - name: Recommend reboot
       debug:
