@@ -105,6 +105,7 @@
       fail:
         msg: "DNS resolution for the AD domain failed: {{ nslookup_result.stderr }}"
       when: nslookup_result.rc != 0
+      ignore_errors: yes
 
     - name: Discover the AD domain
       command: realm discover {{ ad_domain }}
