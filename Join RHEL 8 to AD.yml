@@ -83,18 +83,18 @@
           {{ domain }} = {{ domain | upper }}
 
     - name: Check FIPS mode status
-      command: fipscheck
+      command: cat /proc/sys/crypto/fips_enabled
       register: fipscheck_result
       ignore_errors: yes
-
+    
     - name: Display FIPS check result
       debug:
         msg: "FIPS check result: {{ fipscheck_result.stdout }}"
-
+    
     - name: Fail if FIPS mode is not enabled
       fail:
-        msg: "FIPS mode is not enabled. fipscheck result: {{ fipscheck_result.stdout }}"
-      when: "'fips mode is off' in fipscheck_result.stdout"
+        msg: "FIPS mode is not enabled. FIPS check result: {{ fipscheck_result.stdout }}"
+      when: fipscheck_result.stdout | trim != "1"
 
     - name: Check DNS resolution for the AD domain
       command: nslookup {{ ad_domain }}
