@@ -1,0 +1,178 @@
+---
+# This playbook was written and developed by Oslitandi Tech LLC.
+# For all questions, please forward them to ot@oslitanditech.com.
+
+- name: Join Red Hat 8 Server to Active Directory
+  hosts: Gold_Systems
+  become: yes
+  vars:
+    ad_domain: "lab-dc-01.bizzy-lab.com"
+    ad_user: "{{ lookup('env', 'DOMAIN_JOIN_USER') }}"
+    ad_password: "{{ lookup('env', 'DOMAIN_JOIN_PASSWORD') }}"
+    krb5_config_path: "/etc/krb5.conf"
+    sudoers_file_path: "/etc/sudoers"
+    nsswitch_conf_path: "/etc/nsswitch.conf"
+    password_auth_path: "/etc/pam.d/password-auth"
+    system_auth_path: "/etc/pam.d/system-auth"
+  
+  tasks:
+    - name: Install required packages
+      yum:
+        name:
+          - adcli
+          - sssd
+          - realmd
+          - authselect
+          - oddjob
+          - oddjob-mkhomedir
+        state: present
+
+    - name: Backup krb5.conf
+      copy:
+        src: "{{ krb5_config_path }}"
+        dest: "{{ krb5_config_path }}.backup"
+        remote_src: yes
+
+    - name: Backup sudoers file
+      copy:
+        src: "{{ sudoers_file_path }}"
+        dest: "{{ sudoers_file_path }}.backup"
+        remote_src: yes
+
+    - name: Backup nsswitch.conf
+      copy:
+        src: "{{ nsswitch_conf_path }}"
+        dest: "{{ nsswitch_conf_path }}.backup"
+        remote_src: yes
+
+    - name: Backup password-auth
+      copy:
+        src: "{{ password_auth_path }}"
+        dest: "{{ password_auth_path }}.backup"
+        remote_src: yes
+
+    - name: Backup system-auth
+      copy:
+        src: "{{ system_auth_path }}"
+        dest: "{{ system_auth_path }}.backup"
+        remote_src: yes
+
+    - name: Configure krb5.conf
+      copy:
+        dest: "{{ krb5_config_path }}"
+        content: |
+          [logging]
+          default = FILE:/var/log/krb5libs.log
+          kdc = FILE:/var/log/krb5kdc.log
+          admin_server = FILE:/var/log/kadmind.log
+
+          [libdefaults]
+          default_realm = {{ ad_domain | upper }}
+          dns_lookup_realm = false
+          dns_lookup_kdc = true
+
+          [realms]
+          {{ ad_domain | upper }} = {
+            kdc = {{ ad_domain }}
+            admin_server = {{ ad_domain }}
+          }
+
+          [domain_realm]
+          .{{ ad_domain }} = {{ ad_domain | upper }}
+          {{ ad_domain }} = {{ ad_domain | upper }}
+
+    - name: Check FIPS mode status
+      command: sudo fipscheck
+      register: fipscheck_result
+      ignore_errors: yes
+
+    - name: Display FIPS check result
+      debug:
+        msg: "FIPS check result: {{ fipscheck_result.stdout }}"
+
+    - name: Fail if FIPS mode is not enabled
+      fail:
+        msg: "FIPS mode is not enabled. fipscheck result: {{ fipscheck_result.stdout }}"
+      when: "'fips mode is off' in fipscheck_result.stdout"
+
+    - name: Check DNS resolution for the AD domain
+      command: nslookup {{ ad_domain }}
+      register: nslookup_result
+      ignore_errors: yes
+
+    - name: Fail if DNS resolution fails
+      fail:
+        msg: "DNS resolution for the AD domain failed: {{ nslookup_result.stderr }}"
+      when: nslookup_result.rc != 0
+
+    - name: Discover the AD domain
+      command: realm discover {{ ad_domain }}
+      register: realm_discover_result
+      ignore_errors: yes
+
+    - name: Fail if realm discover fails
+      fail:
+        msg: "Unable to discover the AD domain: {{ realm_discover_result.stderr }}"
+      when: realm_discover_result.rc != 0
+
+    - name: Discover the Active Directory domain
+      command: "realm discover {{ ad_domain }}"
+      register: realm_discover
+
+    - name: Join the server to Active Directory
+      command: >
+      echo "{{ ad_password }}" | realm join --user={{ ad_user }} {{ ad_domain }}
+      when: "'active-directory' in realm_discover.stdout"
+
+    - name: Enable and start SSSD service
+      systemd:
+        name: sssd
+        enabled: yes
+        state: started
+
+    - name: Enable and start oddjobd service
+      systemd:
+        name: oddjobd
+        enabled: yes
+        state: started
+
+    - name: Configure authselect for AD
+      command: "authselect select sssd with-mkhomedir --force"
+
+    - name: Update crypto policies
+      command: "update-crypto-policies --set DEFAULT:AD-SUPPORT"
+
+    - name: Configure sudoers for temp-sudo-group
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%temp-sudo-group'
+        line: '%temp-sudo-group ALL=(ALL) ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+    - name: Validate the AD join using realm list
+      command: realm list
+      register: realm_list_result
+      ignore_errors: yes
+
+    - name: Display realm list result
+      debug:
+        msg: "Realm list result: {{ realm_list_result.stdout }}"
+
+    - name: Check the realm list result for domain name
+      command: grep 'bizzy-lab.com' realm list
+      register: domain_name_result
+      ignore_errors: yes
+
+    - name: Validate the /etc/sssd/sssd.conf file for domain configuration
+      command: grep 'bizzy-lab.com' /etc/sssd/sssd.conf
+      register: sssd_conf_result
+      ignore_errors: yes
+
+    - name: Check the sssd.conf result for domain configuration
+      fail:
+        msg: "AD join validation failed: Domain configuration not found in /etc/sssd/sssd.conf"
+      when: sssd_conf_result.rc != 0
+
+    - name: Recommend reboot
+      debug:
+        msg: "It is recommended to reboot the server to apply all changes."
