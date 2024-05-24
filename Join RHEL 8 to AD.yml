@@ -80,7 +80,7 @@
 
           [domain_realm]
           .{{ domain }} = {{ domain | upper }}
-          {{ domain }} = {{ domain | upper }}
+          {{ domain }} = {{ domain | upper }}          
 
     - name: Check FIPS mode status
       command: cat /proc/sys/crypto/fips_enabled
@@ -178,10 +178,10 @@
       failed_when: sssd_conf_result_validation.rc != 0
 
     - name: Recommendations
-  debug:
-    msg: |
-      It is recommended to reboot the server to apply all changes.
-      Additionally, check if user accounts work by switching to a domain user.
-      For example, su jthompson@bizzy-lab.com from terminal.
-      Once logged in, type ls -las /home.
-      You should see the home directory for the domain user.
+      debug:
+        msg: |
+          It is recommended to reboot the server to apply all changes.
+          Additionally, check if user accounts work by switching to a domain user.
+          For example, su jthompson@bizzy-lab.com from terminal.
+          Once logged in, type ls -las /home.
+          You should see the home directory for the domain user.
