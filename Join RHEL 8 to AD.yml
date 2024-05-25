@@ -3,11 +3,11 @@
 # For all questions, please forward them to ot@oslitanditech.com.
 
 - name: Join Red Hat 8 Server to Active Directory
-  hosts: Gold_Systems
+  hosts: "{{ hosts }}""
   become: yes
   vars:
-    domain: "bizzy-lab.com"
-    ad_domain: "lab-dc-01.bizzy-lab.com"
+    domain: "{{ domain }}"
+    ad_domain: "{{ ad_domain }}"
     ad_user: "{{ lookup('env', 'DOMAIN_JOIN_USER') }}"
     ad_password: "{{ lookup('env', 'DOMAIN_JOIN_PASSWORD') }}"
     krb5_config_path: "/etc/krb5.conf"
