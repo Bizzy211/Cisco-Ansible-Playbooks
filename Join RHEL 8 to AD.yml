@@ -3,7 +3,7 @@
 # For all questions, please forward them to ot@oslitanditech.com.
 
 - name: Join Red Hat 8 Server to Active Directory
-  hosts: "{{ hosts }}""
+  hosts: "{{ hosts }}"
   become: yes
   vars:
     domain: "{{ domain }}"
