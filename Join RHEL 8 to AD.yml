@@ -1,4 +1,3 @@
----
 # This playbook was written and developed by Oslitandi Tech LLC.
 # For all questions, please forward them to ot@oslitanditech.com.
 
@@ -80,7 +79,7 @@
 
           [domain_realm]
           .{{ domain }} = {{ domain | upper }}
-          {{ domain }} = {{ domain | upper }}          
+          {{ domain }} = {{ domain | upper }}                    
 
     - name: Check FIPS mode status
       command: cat /proc/sys/crypto/fips_enabled
@@ -91,10 +90,23 @@
       debug:
         msg: "FIPS check result: {{ fipscheck_result.stdout }}"
     
-    - name: Fail if FIPS mode is not enabled
-      fail:
-        msg: "FIPS mode is not enabled. FIPS check result: {{ fipscheck_result.stdout }}"
+    - name: Enable FIPS mode if not enabled
+      command: fips-mode-setup --enable
       when: fipscheck_result.stdout | trim != "1"
+
+    - name: Check FIPS mode status again
+      command: cat /proc/sys/crypto/fips_enabled
+      register: fipscheck_result_after
+      ignore_errors: yes
+    
+    - name: Display FIPS check result after enabling
+      debug:
+        msg: "FIPS check post enabling: {{ fipscheck_result_after.stdout }}"
+
+    - name: Fail if FIPS mode is still not enabled
+      fail:
+        msg: "FIPS mode is not enabled. FIPS check result after enabling: {{ fipscheck_result_after.stdout }}"
+      when: fipscheck_result_after.stdout | trim != "1"
 
     - name: Check DNS resolution for the AD domain
       command: nslookup {{ ad_domain }}
