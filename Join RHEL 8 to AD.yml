@@ -93,6 +93,27 @@
     - name: Enable FIPS mode if not enabled
       command: fips-mode-setup --enable
       when: fipscheck_result.stdout | trim != "1"
+      register: fips_enable_result
+      async: 0
+      poll: 0
+
+    - name: Wait for FIPS mode enablement
+      async_status:
+        jid: "{{ fips_enable_result.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: 30
+      delay: 10
+      when: fipscheck_result.stdout | trim != "1"
+
+    - name: Reboot the server if FIPS mode was enabled
+      reboot:
+      when: fipscheck_result.stdout | trim != "1"
+
+    - name: Wait for server to come back online
+      wait_for_connection:
+        timeout: 300
+      when: fipscheck_result.stdout | trim != "1"
 
     - name: Check FIPS mode status again
       command: cat /proc/sys/crypto/fips_enabled
@@ -101,7 +122,7 @@
     
     - name: Display FIPS check result after enabling
       debug:
-        msg: "FIPS check post enabling: {{ fipscheck_result_after.stdout }}"
+        msg: "FIPS check result after enabling: {{ fipscheck_result_after.stdout }}"
 
     - name: Fail if FIPS mode is still not enabled
       fail:
