@@ -25,10 +25,6 @@
       debug:
         var: vm_info
 
-    - name: Set VM power state fact
-      set_fact:
-        vm_powered_on: "{{ vm_info.virtual_machines[0].guest.powerState == 'poweredOn' }}"
-
     - name: Power off the VM if it is powered on
       community.vmware.vmware_guest:
         hostname: "{{ esxi_host }}"
@@ -38,12 +34,12 @@
         datacenter: "{{ datacenter }}"
         vm_name: "{{ vm_name }}"
         state: powered_off
-      when: vm_powered_on
+      when: "'power_state: poweredOn' in vm_info.virtual_machines[0]"
 
     - name: Wait for 1 minute if VM was powered on
       wait_for:
         timeout: 60
-      when: vm_powered_on
+      when: "'power_state: poweredOn' in vm_info.virtual_machines[0]"
 
     - name: Revert VM to snapshot
       community.vmware.vmware_guest_snapshot:
