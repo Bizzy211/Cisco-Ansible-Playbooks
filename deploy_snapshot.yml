@@ -1,0 +1,68 @@
+---
+- name: Deploy snapshot of ESXi VM
+  hosts: localhost
+  gather_facts: no
+  vars:
+    esxi_host: ""
+    esxi_username: ""
+    esxi_password: ""  # Replace with your ESXi host password
+    vm_name: ""
+    snapshot_id: ""  # Replace with the name of the snapshot you want to revert to
+    datacenter: ""
+    vm_folder: ""
+
+  tasks:
+    - name: Gather information about the VM
+      community.vmware.vmware_vm_info:
+        hostname: "{{ esxi_host }}"
+        username: "{{ esxi_username }}"
+        password: "{{ esxi_password }}"
+        validate_certs: no
+        vm_name: "{{ vm_name }}"
+      register: vm_info
+
+    - name: Debug VM info
+      debug:
+        var: vm_info
+
+    - name: Set VM power state fact
+      set_fact:
+        vm_powered_on: "{{ vm_info.virtual_machines[0].guest.powerState == 'poweredOn' }}"
+
+    - name: Power off the VM if it is powered on
+      community.vmware.vmware_guest:
+        hostname: "{{ esxi_host }}"
+        username: "{{ esxi_username }}"
+        password: "{{ esxi_password }}"
+        validate_certs: no
+        datacenter: "{{ datacenter }}"
+        vm_name: "{{ vm_name }}"
+        state: powered_off
+      when: vm_powered_on
+
+    - name: Wait for 1 minute if VM was powered on
+      wait_for:
+        timeout: 60
+      when: vm_powered_on
+
+    - name: Revert VM to snapshot
+      community.vmware.vmware_guest_snapshot:
+        hostname: "{{ esxi_host }}"
+        username: "{{ esxi_username }}"
+        password: "{{ esxi_password }}"
+        validate_certs: no
+        datacenter: "{{ datacenter }}"
+        name: "{{ vm_name }}"
+        folder: "{{ vm_folder }}"
+        state: revert
+        snapshot_id: "{{ snapshot_id }}"
+
+    - name: Power on the VM
+      community.vmware.vmware_guest:
+        hostname: "{{ esxi_host }}"
+        username: "{{ esxi_username }}"
+        password: "{{ esxi_password }}"
+        validate_certs: no
+        datacenter: "{{ datacenter }}"
+        vm_name: "{{ vm_name }}"
+        state: powered_on
