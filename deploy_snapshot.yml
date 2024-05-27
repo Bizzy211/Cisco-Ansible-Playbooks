@@ -61,4 +61,4 @@
         validate_certs: no
         datacenter: "{{ datacenter }}"
         vm_name: "{{ vm_name }}"
-        state: powered_on
+        state: poweredon
